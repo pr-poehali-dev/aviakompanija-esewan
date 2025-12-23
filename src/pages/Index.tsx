@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import Icon from '@/components/ui/icon';
 
 interface Flight {
@@ -27,10 +28,10 @@ const mockFlights: Flight[] = [
 ];
 
 const routes = [
-  { from: 'Москва', to: 'Санкт-Петербург', price: 'от 3 500 ₽', duration: '1ч 30м', flights: '8 рейсов/день' },
-  { from: 'Москва', to: 'Новосибирск', price: 'от 8 900 ₽', duration: '4ч 15м', flights: '6 рейсов/день' },
-  { from: 'Екатеринбург', to: 'Сочи', price: 'от 7 200 ₽', duration: '3ч 45м', flights: '4 рейса/день' },
-  { from: 'Владивосток', to: 'Москва', price: 'от 15 600 ₽', duration: '8ч 20м', flights: '5 рейсов/день' },
+  { from: 'Москва', to: 'Санкт-Петербург', price: 'от 3 500 ₽', duration: '1ч 30м', flights: '8 рейсов/день', coordinates: { from: { x: 50, y: 35 }, to: { x: 52, y: 30 } } },
+  { from: 'Москва', to: 'Новосибирск', price: 'от 8 900 ₽', duration: '4ч 15м', flights: '6 рейсов/день', coordinates: { from: { x: 50, y: 35 }, to: { x: 75, y: 40 } } },
+  { from: 'Екатеринбург', to: 'Сочи', price: 'от 7 200 ₽', duration: '3ч 45м', flights: '4 рейса/день', coordinates: { from: { x: 65, y: 38 }, to: { x: 45, y: 65 } } },
+  { from: 'Владивосток', to: 'Москва', price: 'от 15 600 ₽', duration: '8ч 20м', flights: '5 рейсов/день', coordinates: { from: { x: 95, y: 50 }, to: { x: 50, y: 35 } } },
 ];
 
 const news = [
@@ -65,6 +66,8 @@ export default function Index() {
   const [activeSection, setActiveSection] = useState('home');
   const [searchFlight, setSearchFlight] = useState('');
   const [filteredFlights, setFilteredFlights] = useState<Flight[]>([]);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [selectedRoute, setSelectedRoute] = useState<number | null>(null);
 
   const handleFlightSearch = () => {
     if (searchFlight.trim()) {
@@ -81,7 +84,18 @@ export default function Index() {
     setActiveSection(sectionId);
     const element = document.getElementById(sectionId);
     element?.scrollIntoView({ behavior: 'smooth' });
+    setMobileMenuOpen(false);
   };
+
+  const menuItems = [
+    { id: 'home', label: 'Главная', icon: 'Home' },
+    { id: 'tracking', label: 'Отслеживание', icon: 'Radio' },
+    { id: 'routes', label: 'Маршруты', icon: 'Map' },
+    { id: 'about', label: 'О нас', icon: 'Info' },
+    { id: 'booking', label: 'Бронирование', icon: 'Ticket' },
+    { id: 'news', label: 'Новости', icon: 'Newspaper' },
+    { id: 'faq', label: 'FAQ', icon: 'HelpCircle' },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 to-white">
@@ -94,15 +108,7 @@ export default function Index() {
             </div>
             
             <div className="hidden md:flex gap-6">
-              {[
-                { id: 'home', label: 'Главная', icon: 'Home' },
-                { id: 'tracking', label: 'Отслеживание', icon: 'Radio' },
-                { id: 'routes', label: 'Маршруты', icon: 'Map' },
-                { id: 'about', label: 'О нас', icon: 'Info' },
-                { id: 'booking', label: 'Бронирование', icon: 'Ticket' },
-                { id: 'news', label: 'Новости', icon: 'Newspaper' },
-                { id: 'faq', label: 'FAQ', icon: 'HelpCircle' },
-              ].map(item => (
+              {menuItems.map(item => (
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
@@ -118,9 +124,31 @@ export default function Index() {
               ))}
             </div>
 
-            <Button size="sm" className="md:hidden">
-              <Icon name="Menu" size={20} />
-            </Button>
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button size="sm" className="md:hidden">
+                  <Icon name="Menu" size={20} />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                <div className="flex flex-col gap-2 mt-8">
+                  {menuItems.map(item => (
+                    <button
+                      key={item.id}
+                      onClick={() => scrollToSection(item.id)}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left ${
+                        activeSection === item.id 
+                          ? 'text-primary bg-primary/10' 
+                          : 'text-gray-700 hover:text-primary hover:bg-gray-50'
+                      }`}
+                    >
+                      <Icon name={item.icon as any} size={22} />
+                      <span className="text-lg font-medium">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </nav>
@@ -237,9 +265,127 @@ export default function Index() {
             <p className="text-xl text-gray-600">Выгодные цены на направления по всей России</p>
           </div>
 
+          <div className="max-w-6xl mx-auto mb-12">
+            <Card className="overflow-hidden shadow-xl animate-scale-in">
+              <CardContent className="p-0">
+                <div className="relative bg-gradient-to-br from-sky-100 to-blue-50 h-[400px]">
+                  <svg viewBox="0 0 100 100" className="w-full h-full">
+                    <defs>
+                      <filter id="glow">
+                        <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
+                        <feMerge>
+                          <feMergeNode in="coloredBlur"/>
+                          <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    
+                    {routes.map((route, index) => (
+                      <g key={index}>
+                        <line
+                          x1={route.coordinates.from.x}
+                          y1={route.coordinates.from.y}
+                          x2={route.coordinates.to.x}
+                          y2={route.coordinates.to.y}
+                          stroke={selectedRoute === index ? '#0EA5E9' : '#94a3b8'}
+                          strokeWidth={selectedRoute === index ? '0.5' : '0.3'}
+                          strokeDasharray="2,2"
+                          opacity={selectedRoute === null ? '0.6' : selectedRoute === index ? '1' : '0.2'}
+                          className="transition-all duration-300"
+                        />
+                        
+                        <circle
+                          cx={route.coordinates.from.x}
+                          cy={route.coordinates.from.y}
+                          r="2"
+                          fill={selectedRoute === index ? '#0EA5E9' : '#1A1F2C'}
+                          opacity={selectedRoute === null ? '1' : selectedRoute === index ? '1' : '0.3'}
+                          className="transition-all duration-300 cursor-pointer"
+                          filter={selectedRoute === index ? 'url(#glow)' : ''}
+                          onMouseEnter={() => setSelectedRoute(index)}
+                          onMouseLeave={() => setSelectedRoute(null)}
+                        />
+                        <circle
+                          cx={route.coordinates.to.x}
+                          cy={route.coordinates.to.y}
+                          r="2"
+                          fill={selectedRoute === index ? '#0EA5E9' : '#1A1F2C'}
+                          opacity={selectedRoute === null ? '1' : selectedRoute === index ? '1' : '0.3'}
+                          className="transition-all duration-300 cursor-pointer"
+                          filter={selectedRoute === index ? 'url(#glow)' : ''}
+                          onMouseEnter={() => setSelectedRoute(index)}
+                          onMouseLeave={() => setSelectedRoute(null)}
+                        />
+
+                        {selectedRoute === index && (
+                          <>
+                            <circle
+                              cx={(route.coordinates.from.x + route.coordinates.to.x) / 2}
+                              cy={(route.coordinates.from.y + route.coordinates.to.y) / 2}
+                              r="1.5"
+                              fill="#0EA5E9"
+                              className="animate-pulse"
+                            >
+                              <animate
+                                attributeName="cx"
+                                from={route.coordinates.from.x}
+                                to={route.coordinates.to.x}
+                                dur="3s"
+                                repeatCount="indefinite"
+                              />
+                              <animate
+                                attributeName="cy"
+                                from={route.coordinates.from.y}
+                                to={route.coordinates.to.y}
+                                dur="3s"
+                                repeatCount="indefinite"
+                              />
+                            </circle>
+                          </>
+                        )}
+                      </g>
+                    ))}
+                  </svg>
+
+                  {selectedRoute !== null && (
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 animate-scale-in">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-2xl font-bold text-secondary">
+                          {routes[selectedRoute].from} → {routes[selectedRoute].to}
+                        </h3>
+                        <Icon name="Plane" size={24} className="text-primary" />
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <div className="text-sm text-gray-600 mb-1">Цена</div>
+                          <div className="text-xl font-bold text-primary">{routes[selectedRoute].price}</div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-600 mb-1">Время</div>
+                          <div className="text-xl font-bold">{routes[selectedRoute].duration}</div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-600 mb-1">Частота</div>
+                          <div className="text-sm font-semibold">{routes[selectedRoute].flights}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            <p className="text-center text-gray-600 mt-4 text-sm">Наведите на маршрут для просмотра деталей</p>
+          </div>
+
           <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
             {routes.map((route, index) => (
-              <Card key={index} className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scale-in" style={{ animationDelay: `${index * 0.1}s` }}>
+              <Card 
+                key={index} 
+                className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scale-in cursor-pointer" 
+                style={{ animationDelay: `${index * 0.1}s` }}
+                onMouseEnter={() => setSelectedRoute(index)}
+                onMouseLeave={() => setSelectedRoute(null)}
+              >
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-2xl">{route.from} → {route.to}</CardTitle>
